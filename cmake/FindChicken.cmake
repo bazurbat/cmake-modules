@@ -1,28 +1,31 @@
 # - Find Chicken
 
-if(NOT CHICKEN_HOST_ROOT_DIR)
-    if(EXISTS $ENV{CHICKEN_PREFIX})
-        set(CHICKEN_HOST_ROOT_DIR $ENV{CHICKEN_PREFIX})
+if(NOT CHICKEN_ROOT_DIR)
+    if(EXISTS ${CHICKEN_PREFIX})
+        set(_chicken_root $ENV{CHICKEN_PREFIX})
     else()
-        set(CHICKEN_HOST_ROOT_DIR "/usr")
+        set(_chicken_root "/usr")
     endif()
-endif()
-if(NOT CHICKEN_TARGET_ROOT_DIR)
-    set(CHICKEN_TARGET_ROOT_DIR ${CHICKEN_HOST_ROOT_DIR})
+    set(CHICKEN_ROOT_DIR ${_chicken_root} CACHE PATH
+        "Chicken host install root")
 endif()
 
 find_program(CHICKEN_EXECUTABLE ${CHICKEN_PROGRAM_PREFIX}chicken
-    PATHS ${CHICKEN_HOST_ROOT_DIR}/bin
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    PATHS ${CHICKEN_ROOT_DIR}/bin
+    NO_DEFAULT_PATH)
 find_program(CHICKEN_CSC_EXECUTABLE ${CHICKEN_PROGRAM_PREFIX}csc
-    PATHS ${CHICKEN_HOST_ROOT_DIR}/bin
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    PATHS ${CHICKEN_ROOT_DIR}/bin
+    NO_DEFAULT_PATH)
 find_path(CHICKEN_INCLUDE_DIR chicken.h
-    PATHS ${CHICKEN_TARGET_ROOT_DIR}/include/chicken
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
-find_library(CHICKEN_LIBRARY chicken
-    PATHS ${CHICKEN_TARGET_ROOT_DIR}/lib
-    NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    PATHS ${CHICKEN_ROOT_DIR}/include/${CHICKEN_PROGRAM_PREFIX}chicken
+    NO_DEFAULT_PATH)
+find_library(CHICKEN_LIBRARY
+    NAMES chicken ${CHICKEN_PROGRAM_PREFIX}chicken
+    PATHS ${CHICKEN_TARGET_ROOT_DIR}/lib ${CHICKEN_ROOT_DIR}/lib
+    NO_DEFAULT_PATH)
+
+mark_as_advanced(CHICKEN_EXECUTABLE CHICKEN_CSC_EXECUTABLE
+    CHICKEN_INCLUDE_DIR CHICKEN_LIBRARY)
 
 function(_chicken_args_options _ARGS _OPTIONS)
     set(_doing_options FALSE)
@@ -98,15 +101,6 @@ function(add_chicken_source _OUTVAR _FILENAME)
     set(${_OUTVAR} ${${_OUTVAR}} PARENT_SCOPE)
 endfunction()
 
-function(chicken_wrap_scm _SOURCES)
-    _chicken_args_options(_files _options ${ARGN})
-    foreach(_f ${_files})
-        add_chicken_source(_sources ${_f} ${_options})
-    endforeach()
-    list(APPEND ${_SOURCES} ${_sources})
-    set(${_SOURCES} ${${_SOURCES}} PARENT_SCOPE)
-endfunction()
-
 function(add_chicken_module _NAME _FILENAME)
     _chicken_args_options(_names _options ${ARGN})
     if(_names)
@@ -126,11 +120,21 @@ function(add_chicken_module _NAME _FILENAME)
     target_link_libraries(${_NAME} ${CHICKEN_LIBRARIES})
 endfunction()
 
+function(chicken_wrap_sources _SOURCES)
+    _chicken_args_options(_files _options ${ARGN})
+    foreach(_f ${_files})
+        add_chicken_source(_sources ${_f} ${_options})
+    endforeach()
+    list(APPEND ${_SOURCES} ${_sources})
+    set(${_SOURCES} ${${_SOURCES}} PARENT_SCOPE)
+endfunction()
+
 include(FindPackageHandleStandardArgs)
 include(FindPackageMessage)
 
-find_package_handle_standard_args(Chicken DEFAULT_MSG CHICKEN_HOST_ROOT_DIR
-    CHICKEN_CSC_EXECUTABLE CHICKEN_INCLUDE_DIR CHICKEN_LIBRARY)
+find_package_handle_standard_args(Chicken DEFAULT_MSG CHICKEN_ROOT_DIR
+    CHICKEN_EXECUTABLE CHICKEN_CSC_EXECUTABLE
+    CHICKEN_INCLUDE_DIR CHICKEN_LIBRARY)
 
 if(CHICKEN_FOUND)
     set(CHICKEN_INCLUDE_DIRS ${CHICKEN_INCLUDE_DIR})
@@ -141,9 +145,9 @@ if(CHICKEN_FOUND)
         OUTPUT_STRIP_TRAILING_WHITESPACE)
     set(CHICKEN_LIBRARIES ${CHICKEN_LIBRARY} ${CHICKEN_LIBRARIES})
 
-    find_package_message(CHICKEN
-        "\tCHICKEN_CSC_EXECUTABLE: ${CHICKEN_CSC_EXECUTABLE}
+    find_package_message(Chicken
+        "\tCHICKEN_EXECUTABLE: ${CHICKEN_EXECUTABLE}
 \tCHICKEN_INCLUDE_DIR: ${CHICKEN_INCLUDE_DIR}
 \tCHICKEN_LIBRARY: ${CHICKEN_LIBRARY}"
-        "${CHICKEN_HOST_ROOT_DIR}")
+        "$CHICKEN_ROOT_DIR")
 endif()
