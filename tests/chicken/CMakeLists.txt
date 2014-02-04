@@ -11,7 +11,7 @@ set(CMAKE_C_FLAGS -std=gnu99)
 set(standalone_c_SOURCES standalone.c)
 add_executable(standalone_c ${standalone_c_SOURCES})
 
-chicken_wrap_scm(standalone_scm_SOURCES standalone.scm)
+chicken_wrap_sources(standalone_scm_SOURCES standalone.scm)
 add_executable(standalone_scm ${standalone_scm_SOURCES})
 target_link_libraries(standalone_scm ${CHICKEN_LIBRARIES})
 
