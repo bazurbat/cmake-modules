@@ -1,9 +1,12 @@
 project(chicken-modules)
 
+add_chicken_library(module module.scm EMIT module ARGS -optimize-level 2 -inline)
+add_chicken_library(mmodule mmodule.scm EMIT module1 module2
+    ARGS -optimize-level 3 -profile)
+
 set(SOURCES)
-add_chicken_source(SOURCES usemodule.scm -O1 -include-path "spa ced")
-add_chicken_module(module module.scm OPTIONS -O2 -inline)
-add_chicken_module(mmodule mmodule.scm module1 module2 OPTIONS -O3 -profile)
+add_chicken_sources(SOURCES usemodule.scm
+    ARGS -optimize-level 0 -include-path "spa ced")
 add_executable(usemodule ${SOURCES})
 add_dependencies(usemodule module mmodule)
 target_link_libraries(usemodule ${CHICKEN_LIBRARIES})
