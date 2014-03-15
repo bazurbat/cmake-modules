@@ -11,6 +11,10 @@ macro(_chicken_parse_arguments)
 endmacro()
 
 macro(_chicken_process_arguments)
+    set(command_output)
+    set(command_args)
+    set(command_c_flags)
+
     if(compile_STATIC)
         list(APPEND command_args -feature chicken-compile-static)
         set(output_suffix ".static")
@@ -33,7 +37,9 @@ macro(_chicken_process_arguments)
     endforeach()
 
     list(APPEND command_args ${compile_ARGS})
-    set(command_c_flags "${command_c_flags} ${compile_C_FLAGS}")
+    foreach(flag ${compile_C_FLAGS})
+        set(command_c_flags "${command_c_flags} ${flag}")
+    endforeach()
 endmacro()
 
 function(_chicken_command out_var in_filename)
@@ -57,7 +63,9 @@ function(_chicken_command out_var in_filename)
     add_custom_command(
         OUTPUT ${out_filename} ${command_output}
         COMMAND ${CHICKEN_EXECUTABLE}
-        ARGS ${in_filename} -output-file ${out_filename} -include-path ${in_path}
+        ARGS ${in_filename} -output-file ${out_filename}
+            -include-path ${CMAKE_CURRENT_BINARY_DIR}
+            -include-path ${in_path}
              ${CHICKEN_ARGS} ${command_args}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         DEPENDS ${in_filename}
@@ -85,6 +93,7 @@ function(add_chicken_library name)
     else()
         set(library_type MODULE)
         set(compile_SHARED TRUE)
+        set(compile_MODULE TRUE)
     endif()
     _chicken_process_arguments()
     set(sources)
@@ -98,5 +107,21 @@ function(add_chicken_library name)
     else()
         target_link_libraries(${name} ${CHICKEN_LIBRARIES})
     endif()
-    set_target_properties(${name} PROPERTIES PREFIX "")
+    if(compile_MODULE)
+        set_target_properties(${name} PROPERTIES PREFIX "")
+    endif()
+endfunction()
+
+function(add_chicken_module name)
+    add_chicken_library(${name} ${ARGN} MODULE)
+    _chicken_parse_arguments(${ARGN})
+    set(import_libraries ${compile_EMIT})
+    set(compile_EMIT)
+    _chicken_process_arguments()
+    foreach(lib ${import_libraries})
+        add_chicken_library(${lib}.import MODULE
+            ${CMAKE_CURRENT_BINARY_DIR}/${lib}.import.scm
+            CHICKEN_LIBRARY ${compile_CHICKEN_LIBRARY}
+            ARGS ${compile_ARGS} C_FLAGS ${compile_C_FLAGS})
+    endforeach()
 endfunction()

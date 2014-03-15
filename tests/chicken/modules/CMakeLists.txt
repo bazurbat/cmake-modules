@@ -1,8 +1,8 @@
 project(chicken-modules)
 
-add_chicken_library(module module.scm EMIT module ARGS -optimize-level 2 -inline)
-add_chicken_library(mmodule mmodule.scm EMIT module1 module2
-    ARGS -optimize-level 3 -profile)
+add_chicken_module(module module.scm EMIT module ARGS -optimize-level 2 -inline)
+add_chicken_module(mmodule mmodule.scm EMIT module1 module2
+    ARGS -optimize-level 3 -profile C_FLAGS -O0 -O2)
 
 set(SOURCES)
 add_chicken_sources(SOURCES usemodule.scm
