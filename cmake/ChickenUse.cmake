@@ -5,22 +5,22 @@ include(CMakeParseArguments)
 macro(_chicken_parse_arguments)
     cmake_parse_arguments(compile
         "STATIC;SHARED;MODULE;EMBEDDED"
-        "CHICKEN_LIBRARY"
-        "EMIT;ARGS;C_FLAGS"
+        "SUFFIX"
+        "EMIT;OPTIONS;C_FLAGS;C_SOURCES;DEPENDS"
         ${ARGN})
 endmacro()
 
 macro(_chicken_process_arguments)
-    set(command_output)
-    set(command_args)
+    set(command_options)
     set(command_c_flags)
+    set(command_output)
 
     if(compile_STATIC)
-        list(APPEND command_args -feature chicken-compile-static)
+        list(APPEND command_options -feature chicken-compile-static)
         set(output_suffix ".static")
     endif()
     if(compile_SHARED)
-        list(APPEND command_args -feature chicken-compile-shared)
+        list(APPEND command_options -feature chicken-compile-shared)
         set(command_c_flags "${command_c_flags} -DPIC -DC_SHARED")
     endif()
     if(compile_EMBEDDED)
@@ -28,15 +28,16 @@ macro(_chicken_process_arguments)
         set(output_suffix ".embedded")
     endif()
     if(compile_SHARED AND NOT compile_EMBEDDED)
-        list(APPEND command_args -dynamic)
+        list(APPEND command_options -dynamic)
     endif()
 
     foreach(emit ${compile_EMIT})
+        list(APPEND command_options -emit-import-library ${emit})
         list(APPEND command_output ${emit}.import.scm)
-        list(APPEND command_args -emit-import-library ${emit})
     endforeach()
 
-    list(APPEND command_args ${compile_ARGS})
+    list(APPEND command_options ${compile_OPTIONS})
+
     foreach(flag ${compile_C_FLAGS})
         set(command_c_flags "${command_c_flags} ${flag}")
     endforeach()
@@ -44,7 +45,7 @@ endmacro()
 
 function(_chicken_command out_var in_filename)
     string(REGEX REPLACE
-        "(.*)\\.scm$" "\\1${output_suffix}.chicken.c"
+        "(.*)\\.scm$" "\\1${compile_SUFFIX}${output_suffix}.chicken.c"
         out_filename ${in_filename})
 
     get_filename_component(out_name ${out_filename} NAME)
@@ -57,18 +58,25 @@ function(_chicken_command out_var in_filename)
     file(TO_CMAKE_PATH ${in_filename} in_filename)
     get_filename_component(in_path ${in_filename} PATH)
 
+    set(c_flags "${CHICKEN_C_FLAGS} ${command_c_flags}")
+
+    if(NOT in_path STREQUAL CMAKE_CURRENT_BINARY_DIR)
+        list(APPEND command_options -include-path ${in_path})
+        set(c_flags "${c_flags} -I\"${in_path}\"")
+    endif()
+
+    set(c_flags "${c_flags} -I\"${CHICKEN_INCLUDE_DIR}\"")
+
     set_property(SOURCE ${out_filename} APPEND_STRING PROPERTY
-        COMPILE_FLAGS " -I\"${CHICKEN_INCLUDE_DIR}\" -I\"${in_path}\" ${CHICKEN_C_FLAGS} ${command_c_flags}")
+        COMPILE_FLAGS " ${c_flags}")
 
     add_custom_command(
         OUTPUT ${out_filename} ${command_output}
         COMMAND ${CHICKEN_EXECUTABLE}
         ARGS ${in_filename} -output-file ${out_filename}
-            -include-path ${CMAKE_CURRENT_BINARY_DIR}
-            -include-path ${in_path}
-             ${CHICKEN_ARGS} ${command_args}
+             ${CHICKEN_OPTIONS} ${command_options}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS ${in_filename}
+        DEPENDS ${in_filename} ${compile_DEPENDS}
         VERBATIM)
 
     set(${out_var} ${out_filename} PARENT_SCOPE)
@@ -78,10 +86,22 @@ function(add_chicken_sources out_var)
     _chicken_parse_arguments(${ARGN})
     _chicken_process_arguments()
     foreach(arg ${compile_UNPARSED_ARGUMENTS})
-        _chicken_command(output ${arg})
-        list(APPEND ${out_var} ${output})
+        _chicken_command(out_filename ${arg})
+        list(APPEND ${out_var} ${out_filename})
     endforeach()
     set(${out_var} ${${out_var}} PARENT_SCOPE)
+endfunction()
+
+function(add_chicken_executable name)
+    _chicken_parse_arguments(${ARGN})
+    _chicken_process_arguments()
+    set(exe_sources)
+    foreach(arg ${compile_UNPARSED_ARGUMENTS})
+        _chicken_command(out_filename ${arg})
+        list(APPEND exe_sources ${out_filename})
+    endforeach()
+    add_executable(${name} ${exe_sources})
+    target_link_libraries(${name} ${CHICKEN_LIBRARIES})
 endfunction()
 
 function(add_chicken_library name)
@@ -96,19 +116,22 @@ function(add_chicken_library name)
         set(compile_MODULE TRUE)
     endif()
     _chicken_process_arguments()
-    set(sources)
+    set(library_sources)
     foreach(arg ${compile_UNPARSED_ARGUMENTS})
-        _chicken_command(output ${arg})
-        list(APPEND sources ${output})
+        _chicken_command(out_filename ${arg})
+        list(APPEND library_sources ${out_filename})
     endforeach()
-    add_library(${name} ${library_type} ${sources})
-    if(compile_CHICKEN_LIBRARY)
-        target_link_libraries(${name} ${compile_CHICKEN_LIBRARY} ${CHICKEN_EXTRA_LIBRARIES})
-    else()
-        target_link_libraries(${name} ${CHICKEN_LIBRARIES})
-    endif()
+    list(APPEND library_sources ${compile_C_SOURCES})
+    add_library(${name} ${library_type} ${library_sources})
+    target_link_libraries(${name} ${CHICKEN_LIBRARIES})
     if(compile_MODULE)
-        set_target_properties(${name} PROPERTIES PREFIX "")
+        # NOTE: BUILD_WITH_INSTALL_RPATH = true - breaks *.import.so during
+        # compilation, false - breaks tests, need to handle this somehow
+        set_target_properties(${name} PROPERTIES
+            PREFIX ""
+            NO_SONAME TRUE
+            INSTALL_RPATH .
+            BUILD_WITH_INSTALL_RPATH FALSE)
     endif()
 endfunction()
 
@@ -121,7 +144,6 @@ function(add_chicken_module name)
     foreach(lib ${import_libraries})
         add_chicken_library(${lib}.import MODULE
             ${CMAKE_CURRENT_BINARY_DIR}/${lib}.import.scm
-            CHICKEN_LIBRARY ${compile_CHICKEN_LIBRARY}
-            ARGS ${compile_ARGS} C_FLAGS ${compile_C_FLAGS})
+            OPTIONS ${compile_OPTIONS} C_FLAGS ${compile_C_FLAGS})
     endforeach()
 endfunction()
