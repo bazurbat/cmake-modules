@@ -18,26 +18,26 @@ function(_chicken_config_flags)
         "C compiler definitions for building Chicken generated files")
 
     if(MSVC)
+        set(common_flags "/wd4101")
         set(optimize_size "/O1 /Os /Oy")
         set(optimize_speed "/Ox /Ot /Oy")
-        set(optimize_debug "/Od")
+        set(optimize_debug "/Od /Zi")
         # C4101 - unreferenced local variable
-        set(extra_flags "/wd4101")
     else()
+        set(common_flags "-fno-strict-aliasing -fwrapv")
         set(optimize_size "-Os -fomit-frame-pointer")
         set(optimize_speed "-O3 -fomit-frame-pointer")
         set(optimize_debug "-g -Wall -Wno-unused")
-        set(extra_flags "-fno-strict-aliasing -fwrapv")
     endif()
 
+    set(CHICKEN_C_FLAGS_COMMON ${common_flags} CACHE STRING
+        "Additional C compiler flags for Chicken generated files during all build types")
     set(CHICKEN_C_FLAGS_MINSIZEREL ${optimize_size} CACHE STRING
         "Additional C compiler flags for Chicken generated files during minsize builds")
     set(CHICKEN_C_FLAGS_RELEASE ${optimize_speed} CACHE STRING
         "Additional C compiler flags for Chicken generated files during release builds")
     set(CHICKEN_C_FLAGS_DEBUG ${optimize_debug} CACHE STRING
         "Additional C compiler flags for Chicken generated files during debug builds")
-    set(CHICKEN_C_FLAGS_EXTRA ${extra_flags} CACHE STRING
-        "Additional C compiler flags for Chicken generated files during all build types")
 
     if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
         set(c_flags "${CHICKEN_C_FLAGS_MINSIZEREL}")
@@ -47,7 +47,7 @@ function(_chicken_config_flags)
         set(c_flags "${CHICKEN_C_FLAGS_DEBUG}")
     endif()
 
-    set(CHICKEN_C_FLAGS "${c_flags} ${CHICKEN_C_FLAGS_EXTRA} ${CHICKEN_C_DEFINITIONS}" CACHE STRING
+    set(CHICKEN_C_FLAGS "${CHICKEN_C_DEFINITIONS} ${CHICKEN_C_FLAGS_COMMON} ${c_flags}" CACHE STRING
         "Compiler flags for Chicken generated files (forced)" FORCE)
 endfunction()
 
@@ -63,10 +63,12 @@ function(_chicken_config_names)
 endfunction()
 
 function(_chicken_config_find)
-    if((NOT CHICKEN_ROOT_DIR) AND (EXISTS $ENV{CHICKEN_PREFIX}))
-        set(CHICKEN_ROOT_DIR $ENV{CHICKEN_PREFIX})
-    else()
-        set(CHICKEN_ROOT_DIR ${CHICKEN_INSTALL_PREFIX})
+    if(NOT CHICKEN_ROOT_DIR)
+        if(EXISTS $ENV{CHICKEN_PREFIX})
+            set(CHICKEN_ROOT_DIR $ENV{CHICKEN_PREFIX})
+        else()
+            set(CHICKEN_ROOT_DIR ${CHICKEN_INSTALL_PREFIX})
+        endif()
     endif()
 
     find_program(CHICKEN_EXECUTABLE ${CHICKEN_NAME}
@@ -79,8 +81,9 @@ function(_chicken_config_find)
         NO_DEFAULT_PATH)
     find_path(CHICKEN_INCLUDE_DIR chicken.h
         PATH_SUFFIXES ${CHICKEN_NAME})
-    find_library(CHICKEN_LIBRARY ${CHICKEN_NAME}
-        PATHS ${CHICKEN_ROOT_DIR}/lib
+    find_library(CHICKEN_LIBRARY
+        NAMES chicken ${CHICKEN_NAME}
+        PATHS ${CHICKEN_TARGET_ROOT_DIR}/lib ${CHICKEN_ROOT_DIR}/lib
         NO_DEFAULT_PATH)
     find_library(CHICKEN_LIBRARY ${CHICKEN_NAME})
 
@@ -102,10 +105,11 @@ function(_chicken_config_find)
     find_package_handle_standard_args(Chicken DEFAULT_MSG CHICKEN_ROOT_DIR
         CHICKEN_EXECUTABLE CHICKEN_INCLUDE_DIR)
     find_package_message(Chicken
-"\tCHICKEN_EXECUTABLE: ${CHICKEN_EXECUTABLE}
-\tCHICKEN_INCLUDE_DIR: ${CHICKEN_INCLUDE_DIR}
-\tCHICKEN_LIBRARY: ${CHICKEN_LIBRARY} (${CHICKEN_EXTRA_LIBRARIES})
-\tCHICKEN_C_FLAGS: ${CHICKEN_C_FLAGS}"
+        "CHICKEN_ROOT_DIR: ${CHICKEN_ROOT_DIR}
+   CHICKEN_EXECUTABLE: ${CHICKEN_EXECUTABLE}
+   CHICKEN_INCLUDE_DIR: ${CHICKEN_INCLUDE_DIR}
+   CHICKEN_LIBRARY: ${CHICKEN_LIBRARY} (${CHICKEN_EXTRA_LIBRARIES})
+   CHICKEN_C_FLAGS: ${CHICKEN_C_FLAGS}"
 "[${CHICKEN_EXECUTABLE}][${CHICKEN_INCLUDE_DIR}][${CHICKEN_LIBRARY}]")
 endfunction()
 

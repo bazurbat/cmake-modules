@@ -2,9 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(tests-chicken)
 
-find_package(Chicken REQUIRED CONFIG
-    PATHS ${CMAKE_HOME_DIRECTORY}/cmake NO_DEFAULT_PATH)
-include(${CHICKEN_USE_FILE})
+find_package(Chicken REQUIRED)
 
 set(CMAKE_C_FLAGS_RELEASE -O2)
 set(CMAKE_C_FLAGS_DEBUG -O0)
