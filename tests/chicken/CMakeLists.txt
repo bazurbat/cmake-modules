@@ -15,6 +15,9 @@ add_chicken_sources(standalone_scm_SOURCES standalone.scm)
 add_executable(standalone_scm ${standalone_scm_SOURCES})
 target_link_libraries(standalone_scm ${CHICKEN_LIBRARIES})
 
+add_chicken_executable(standalone-static standalone.scm
+    STATIC)
+
 set(SOURCES foreign.c)
 add_chicken_sources(SOURCES with_foreign.scm)
 add_executable(with_foreign ${SOURCES})

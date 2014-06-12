@@ -10,3 +10,8 @@ add_chicken_module(mmodule2 mmodule.scm SUFFIX 2 EMIT module2)
 
 add_chicken_executable(usemodule usemodule.scm
     DEPENDS module.import module1.import module2.import)
+
+add_chicken_library(module-static module.scm STATIC)
+
+add_chicken_executable(usestaticmodule usestaticmodule.scm STATIC)
+target_link_libraries(usestaticmodule module-static)
