@@ -17,6 +17,7 @@ set(CHICKEN_API_VERSION 7 CACHE STRING
     "Chicken API version")
 mark_as_advanced(CHICKEN_API_VERSION)
 
+option(CHICKEN_BUILD_IMPORTS "Compile generated import libraries" YES)
 option(CHICKEN_EMIT_TYPES "Generate files with type declarations" NO)
 option(CHICKEN_EMIT_INLINES "Generate files with globally inlinable procedures" NO)
 option(CHICKEN_EXTRACT_DEPENDS "Automatically extract source file dependencies" NO)
@@ -96,6 +97,8 @@ find_program(CHICKEN_INSTALL_EXECUTABLE
 # Used for automatic dependency extraction during build.
 find_file(CHICKEN_EXTRACT_SCRIPT extract-depends.scm
     HINTS ${CHICKEN_DATA_DIR})
+# find_program(CHICKEN_EXTRACT chicken-extract
+#     HINTS ${CHICKEN_RUNTIME_DIR})
 
 # Use include files and libraries from the system the final compiled
 # executables are intended to run on.
