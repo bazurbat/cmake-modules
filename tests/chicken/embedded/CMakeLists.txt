@@ -1,7 +1,5 @@
 project(embedded)
 
-set(SOURCES chicken_run.c)
-add_chicken_sources(SOURCES program.scm unit.scm EMBEDDED)
-add_executable(chicken_run ${SOURCES})
-target_include_directories(chicken_run PUBLIC ${CHICKEN_INCLUDE_DIRS})
-target_link_libraries(chicken_run ${CHICKEN_LIBRARIES})
+add_chicken_executable(chicken_run EMBEDDED
+    SOURCES program.scm unit.scm
+    C_SOURCES chicken_run.c)
