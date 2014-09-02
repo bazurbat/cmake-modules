@@ -21,9 +21,46 @@ void prepare2_cb(uv_prepare_t *handle) { printf("%s\n", __func__); usleep(200000
 void check1_cb(uv_check_t *handle) { printf("%s\n", __func__); usleep(200000); }
 void check2_cb(uv_check_t *handle) { printf("%s\n", __func__); usleep(200000); }
 
-void idle1_cb(uv_idle_t *handle) { printf("%s\n", __func__); usleep(200000); }
-void idle2_cb(uv_idle_t *handle) { printf("%s\n", __func__); usleep(200000); }
-void idle3_cb(uv_idle_t *handle) { printf("%s\n", __func__); usleep(200000); }
+void idle1_cb(uv_idle_t *handle);
+void idle2_cb(uv_idle_t *handle);
+void idle3_cb(uv_idle_t *handle);
+
+void idle1_cb(uv_idle_t *handle)
+{
+    printf("%s\n", __func__); usleep(200000);
+
+    uv_idle_start(&idle2, idle2_cb);
+    
+    /* if (!uv_is_active((uv_handle_t*)&idle2)) */
+    /*     uv_idle_start(&idle2, idle2_cb); */
+    /* else */
+    /*     uv_idle_stop(&idle2); */
+}
+
+void idle2_cb(uv_idle_t *handle)
+{
+    printf("%s\n", __func__); usleep(200000);
+
+    uv_idle_stop(handle);
+    uv_idle_start(&idle3, idle3_cb);
+
+    /* if (!uv_is_active((uv_handle_t*)&idle3)) */
+    /*     uv_idle_start(&idle3, idle3_cb); */
+    /* else */
+    /*     uv_idle_stop(&idle3); */
+}
+
+void idle3_cb(uv_idle_t *handle)
+{
+    printf("%s\n", __func__); usleep(200000);
+
+    uv_idle_stop(handle);
+
+    /* if (!uv_is_active((uv_handle_t*)&idle1)) */
+    /*     uv_idle_start(&idle1, idle1_cb); */
+    /* else */
+    /*     uv_idle_stop(&idle1); */
+}
 
 void timer1_cb(uv_timer_t *handle) { printf("%s\n", __func__); }
 void timer2_cb(uv_timer_t *handle)
@@ -70,17 +107,17 @@ int main(int argc, char *argv[])
     uv_signal_init(loop, &sig_int);
 
     uv_prepare_start(&prepare1, prepare1_cb);
-    uv_prepare_start(&prepare2, prepare2_cb);
+    /* uv_prepare_start(&prepare2, prepare2_cb); */
 
-    uv_check_start(&check1, check1_cb);
-    uv_check_start(&check2, check2_cb);
+    /* uv_check_start(&check1, check1_cb); */
+    /* uv_check_start(&check2, check2_cb); */
 
     uv_idle_start(&idle1, idle1_cb);
-    uv_idle_start(&idle2, idle2_cb);
-    uv_idle_start(&idle3, idle3_cb);
+    /* uv_idle_start(&idle2, idle2_cb); */
+    /* uv_idle_start(&idle3, idle3_cb); */
 
-    uv_timer_start(&timer1, timer1_cb, 0, 2);
-    uv_timer_start(&timer2, timer2_cb, 0, 0);
+    /* uv_timer_start(&timer1, timer1_cb, 0, 2); */
+    /* uv_timer_start(&timer2, timer2_cb, 0, 0); */
 
     uv_signal_start(&sig_int, signal_cb, SIGINT);
 
