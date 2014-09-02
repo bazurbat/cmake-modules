@@ -1,0 +1,3 @@
+-x c
+-std=gnu99
+-I/usr/include/luajit-2.0
