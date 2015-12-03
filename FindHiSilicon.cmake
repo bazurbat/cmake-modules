@@ -32,7 +32,7 @@ find_package_handle_standard_args(HiSilicon DEFAULT_MSG
 
 if(HISILICON_FOUND)
     set(HISILICON_INCLUDE_DIRS ${HISILICON_SDK_DIR}/pub/include)
-    set(HISILICON_LIBRARIES "")
+    set(HISILICON_LIBRARIES m rt pthread ${CMAKE_DL_LIBS})
 
     foreach(name ${_hi_libraries})
         set(_var _HISILICON_LIBRARY_${name})
