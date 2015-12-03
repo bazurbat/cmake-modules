@@ -16,5 +16,7 @@ endif()
 find_path(LIBUV_INCLUDE_DIRS uv.h)
 find_library(LIBUV_LIBRARIES uv)
 
-find_package_handle_standard_args(Libuv DEFAULT_MSG
+mark_as_advanced(LIBUV_ROOT_DIR LIBUV_INCLUDE_DIRS LIBUV_LIBRARIES)
+
+find_package_handle_standard_args(LIBUV DEFAULT_MSG
     LIBUV_LIBRARIES LIBUV_INCLUDE_DIRS)
