@@ -4,7 +4,6 @@ include(FindPackageHandleStandardArgs)
 
 find_path(HISILICON_SDK_DIR Android.def
     PATHS ${HISILICON_ROOT_DIR}
-    PATH_SUFFIXES device/hisilicon/bigfish/sdk
     NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
 
 # NOTE: contains static libraries - order matters
@@ -42,8 +41,8 @@ if(HISILICON_FOUND)
         set(_var _HISILICON_LIBRARY_${name})
         if(ANDROID)
             find_library(${_var} ${name}
-                PATHS ${HISILICON_OUT_DIR}/obj/SHARED_LIBRARIES/lib${name}_intermediates/LINKED
-                ${HISILICON_OUT_DIR}/obj/STATIC_LIBRARIES/lib${name}_intermediates
+                PATHS ${HISILICON_OBJ_DIR}/SHARED_LIBRARIES/lib${name}_intermediates/LINKED
+                      ${HISILICON_OBJ_DIR}/STATIC_LIBRARIES/lib${name}_intermediates
                 NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
         else()
             find_library(${_var} ${name}
