@@ -31,6 +31,9 @@ find_package_handle_standard_args(HiSilicon DEFAULT_MSG
 
 if(HISILICON_FOUND)
     set(HISILICON_INCLUDE_DIRS ${HISILICON_SDK_DIR}/pub/include)
+    set(HISILICON_MSP_INCLUDE_DIRS ${HISILICON_SDK_DIR}/source/msp/include)
+    set(HISILICON_MSP_API_INCLUDE_DIRS ${HISILICON_SDK_DIR}/source/msp/api/include)
+    set(HISILICON_MSP_DRV_INCLUDE_DIRS ${HISILICON_SDK_DIR}/source/msp/drv/include)
     if(ANDROID)
         set(HISILICON_LIBRARIES "")
     else()
