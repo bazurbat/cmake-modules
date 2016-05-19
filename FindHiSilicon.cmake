@@ -23,7 +23,11 @@ if(ANDROID)
 else()
     set(_hi_libraries
         hi_common
-        hi_msp)
+        hi_msp
+        hi_mce
+        higo
+        higoadp
+        )
 endif()
 
 find_package_handle_standard_args(HiSilicon DEFAULT_MSG
