@@ -54,7 +54,8 @@ if(HISILICON_FOUND)
         else()
             find_library(${_var} ${name}
                 PATHS ${HISILICON_SDK_DIR}/pub/lib/share
-                      ${HISILICON_SDK_DIR}/pub/lib/static)
+                      ${HISILICON_SDK_DIR}/pub/lib/static
+                      NO_DEFAULT_PATH)
         endif()
         if(${_var})
             list(APPEND HISILICON_LIBRARIES ${${_var}})
