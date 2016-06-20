@@ -53,7 +53,7 @@ endif()
 
 list(FIND HiSilicon_FIND_COMPONENTS HiGo HiGo_REQUIRED)
 if(HiGo_REQUIRED GREATER -1)
-    list(APPEND _hi_libraries higo higoadp hi_tde jpeg higo_jpeg hi_jpegenc)
+    list(APPEND _hi_libraries png higo higoadp jpeg hi_tde hi_jpegenc)
 endif()
 
 foreach(name ${_hi_libraries})
