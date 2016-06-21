@@ -74,4 +74,6 @@ foreach(name ${_hi_libraries})
     endif()
 endforeach()
 
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_OLD})
+
 unset(_hi_libraries)
