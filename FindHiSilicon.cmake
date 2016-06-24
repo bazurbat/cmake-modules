@@ -22,9 +22,9 @@ if(ANDROID)
         higo_jpeg)
 else()
     set(_hi_libraries
-        hi_common
         hi_msp
-        hi_mce)
+        hi_mce
+        hi_common)
 endif()
 
 # In order for higo libraries to 'HI_GO_Init' call to succeed
@@ -66,12 +66,13 @@ foreach(name ${_hi_libraries})
     else()
         find_library(${_var} ${name}
             PATHS ${HISILICON_SDK_DIR}/pub/lib/share
-            ${HISILICON_SDK_DIR}/pub/lib/static
+                  ${HISILICON_SDK_DIR}/pub/lib/static
             NO_DEFAULT_PATH)
     endif()
     if(${_var})
         list(APPEND HISILICON_LIBRARIES ${${_var}})
     endif()
+    # message(STATUS "  ${name} => ${${_var}}")
 endforeach()
 
 set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_OLD})
