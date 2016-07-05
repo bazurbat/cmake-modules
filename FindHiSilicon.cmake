@@ -37,6 +37,7 @@ find_package_handle_standard_args(HiSilicon DEFAULT_MSG
     HISILICON_SDK_DIR)
 
 if(NOT HISILICON_FOUND)
+    set(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES_OLD})
     return()
 endif()
 
